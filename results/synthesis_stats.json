@@ -1,0 +1,11 @@
+{
+  "traces": 2600,
+  "steps": 8914,
+  "bytes": 2455947,
+  "seconds": 228.21,
+  "traces_per_sec": 11.39,
+  "bytes_per_sec": 10761.7,
+  "mean_bytes_per_trace": 944.6,
+  "verified_rate": 1.0,
+  "failure_recovery_rate": 0.715
+}

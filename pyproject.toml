@@ -1,0 +1,12 @@
+[project]
+name = "v5-mixture-curriculum"
+version = "1.0.0"
+description = "V5 data mixture and curriculum specification, supply audit, and 1B-proxy ablation harness"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "torch>=2.4",
+]
+
+[tool.uv]
+package = false

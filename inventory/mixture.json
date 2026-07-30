@@ -1,0 +1,164 @@
+{
+  "_README": "Single source of truth for the V5 budget. Every table in README.md is generated from this file plus inventory.json by scripts/build_tables.py. If you change a number here, re-run `make tables` and the README numbers move with it.",
+
+  "budget": {
+    "total_tokens_b": 4000.0,
+    "splits": {
+      "pretrain": 0.90,
+      "anneal": 0.02,
+      "post_training": 0.08
+    }
+  },
+
+  "repetition_model": {
+    "_cite": "Muennighoff et al. 2023, 'Scaling Data-Constrained Language Models'. Effective tokens D' = U * (1 + R_star * (1 - exp(-R / R_star))) where U = unique tokens, R = repetitions (epochs - 1).",
+    "r_star": 15.4,
+    "epoch_soft_cap": 4.0,
+    "epoch_hard_cap": 8.0
+  },
+
+  "lanes": {
+    "_floor_semantics": "A floor is a hard minimum sampling probability that OPUS may not go below. It is enforced from `floor_active_from` onward. longctx has no floor before S3 because sequence length is 4096 until S3 - there is nothing to protect.",
+    "web": {
+      "share": 0.35,
+      "floor": 0.0,
+      "floor_active_from": "S1",
+      "benchmarks": ["MMLU", "MMLU-Pro", "GPQA-Diamond", "HellaSwag"],
+      "sources": ["dclm_baseline", "fineweb_edu", "nemotron_cc_hq", "wikipedia_en"],
+      "synthesis_fraction": 0.0
+    },
+    "code": {
+      "share": 0.32,
+      "floor": 0.20,
+      "floor_active_from": "S1",
+      "benchmarks": ["SWE-bench Verified", "LiveCodeBench", "HumanEval+", "MultiPL-E"],
+      "sources": ["stack_v2_permissive_dedup", "code_docs_notebooks_issues", "commitpackft"],
+      "synthesis_fraction": 0.0
+    },
+    "stem": {
+      "share": 0.18,
+      "floor": 0.10,
+      "floor_active_from": "S1",
+      "benchmarks": ["AIME", "MATH-500", "GPQA-Diamond", "ARC-AGI"],
+      "sources": ["megamath", "finemath_3plus", "openwebmath", "proof_pile_2", "arxiv_fulltext", "pes2o", "long_cot_distill_pool"],
+      "synthesis_fraction": 0.15
+    },
+    "indic": {
+      "share": 0.08,
+      "floor": 0.08,
+      "floor_active_from": "S1",
+      "benchmarks": ["IndicMMLU-Pro", "MILU", "IndicGenBench", "Indic-XNLI", "IN22 (chrF++)"],
+      "sources": ["sangraha_verified", "sangraha_unverified", "sangraha_synthetic_romanised", "indiccorp_v2", "varta_news", "indic_wikipedia_books_gov", "madlad400_indic", "bpcc_samanantar_parallel"],
+      "synthesis_fraction": 0.60,
+      "tiers": {
+        "verified":   {"share": 0.10, "natural": true,  "sources": ["sangraha_verified", "varta_news", "indic_wikipedia_books_gov"]},
+        "unverified": {"share": 0.30, "natural": true,  "sources": ["sangraha_unverified", "indiccorp_v2", "madlad400_indic"]},
+        "translated": {"share": 0.40, "natural": false, "sources": ["bpcc_samanantar_parallel", "MT of stem/code/web lane tokens"]},
+        "synthetic":  {"share": 0.20, "natural": false, "sources": ["sangraha_synthetic_romanised", "self-generated multi-turn native dialogue"]}
+      }
+    },
+    "agentic": {
+      "share": 0.05,
+      "floor": 0.04,
+      "floor_active_from": "S1",
+      "benchmarks": ["Terminal-Bench", "BFCL v3", "SWE-bench Verified (agent scaffold)", "tau-bench"],
+      "sources": ["toolbench", "xlam_apigen_60k", "glaive_function_calling_v2", "toolace", "agentinstruct_pool", "swe_trajectories", "terminal_session_logs_natural"],
+      "synthesis_fraction": 0.99
+    },
+    "longctx": {
+      "share": 0.02,
+      "floor": 0.015,
+      "floor_active_from": "S3",
+      "benchmarks": ["RULER 128k", "LongBench v2", "repo-level SWE-bench"],
+      "sources": ["pg19_books", "repo_packed_stack_v2", "long_arxiv_pes2o_packed", "synthetic_long_agentic_sessions"],
+      "synthesis_fraction": 0.0,
+      "supply_model": {
+        "type": "repacked",
+        "_why": "Long context is a PACKING STRATEGY, not a token source. Only 8% of this lane is natively-long text (PG-19 books). The other 92% is whole-repo, whole-paper and whole-session packing of tokens that already belong to other lanes. Those tokens are DEBITED from the lending lane's supply so they are never counted twice.",
+        "native_fraction": 0.08,
+        "borrows_from": {"code": 0.55, "stem": 0.25, "agentic": 0.12}
+      }
+    }
+  },
+
+  "anneal_reserve": {
+    "total_tokens_b": 80.0,
+    "policy": "Tier A data is BANNED from stages 1-4 by a hard hash-based holdout on the sampler, not by a soft down-weight. A held-out shard cannot leak through OPUS.",
+    "components": [
+      {"id": "finemath_4plus", "tokens_b": 9.6, "lane": "stem", "why": "Highest-density math on the open web. Held back so AIME/MATH gains land when LR is low and the model retains them."},
+      {"id": "verified_long_cot", "tokens_b": 12.0, "lane": "stem", "why": "Execution- or answer-verified long CoT only. Unverified CoT goes in pretrain; verified CoT is the anneal payload."},
+      {"id": "execution_verified_agentic", "tokens_b": 18.0, "lane": "agentic", "why": "Rollouts whose final state passes a real test/assertion. Scarcest, most expensive tokens we own."},
+      {"id": "stack_edu_top_decile", "tokens_b": 14.0, "lane": "code", "why": "Top-decile educational code + docstring-complete repos + CommitPackFT diffs shaped like SWE-bench edits."},
+      {"id": "indic_verified_tier_a", "tokens_b": 16.0, "lane": "indic", "why": "20% of the whole anneal for 8% of pretrain. Deliberate over-weight: Indic is the capability most likely to be under-consolidated at the end of a 3.6T English-dominated run."},
+      {"id": "longctx_packed_tier_a", "tokens_b": 6.4, "lane": "longctx", "why": "Full-repo and full-paper packs at 128k. Long-context is a positional-extrapolation skill and consolidates best at low LR."},
+      {"id": "web_tier_a_reference", "tokens_b": 4.0, "lane": "web", "why": "Small anti-forgetting ballast so the anneal does not tank MMLU."}
+    ]
+  },
+
+  "curriculum": {
+    "warmup_transition_tokens_b": 10.0,
+    "stages": [
+      {
+        "name": "S1 Foundation",
+        "tokens_b": 1080.0,
+        "seq_len": 4096,
+        "mix": {"web": 0.57, "code": 0.21, "stem": 0.10, "indic": 0.08, "agentic": 0.04, "longctx": 0.00},
+        "goal": "Language, world model, syntax. Indic and agentic already sit at their floors - they are never introduced late."
+      },
+      {
+        "name": "S2 Specialist",
+        "tokens_b": 1260.0,
+        "seq_len": 4096,
+        "mix": {"web": 0.32, "code": 0.40, "stem": 0.16, "indic": 0.08, "agentic": 0.04, "longctx": 0.00},
+        "goal": "Code peaks at 40%. Sequence stays short for throughput."
+      },
+      {
+        "name": "S3 Reasoning",
+        "tokens_b": 828.0,
+        "seq_len": 16384,
+        "mix": {"web": 0.21, "code": 0.34, "stem": 0.28, "indic": 0.08, "agentic": 0.05, "longctx": 0.04},
+        "goal": "Long CoT and reasoning-effort control tokens enter. Context 4k -> 16k."
+      },
+      {
+        "name": "S4 Agentic + Long Context",
+        "tokens_b": 432.0,
+        "seq_len": 65536,
+        "mix": {"web": 0.15, "code": 0.33, "stem": 0.245, "indic": 0.08, "agentic": 0.105, "longctx": 0.09},
+        "goal": "Agentic peaks at 10.5% (2.6x its global share). Context 16k -> 64k. Terminal-Bench and RULER are won here."
+      },
+      {
+        "name": "S5 Anneal (Tier A only)",
+        "tokens_b": 80.0,
+        "seq_len": 131072,
+        "mix": {"web": 0.05, "code": 0.175, "stem": 0.27, "indic": 0.20, "agentic": 0.225, "longctx": 0.08},
+        "goal": "LR -> ~0. Tier A reserve only. Indic and agentic deliberately over-weighted vs pretrain."
+      }
+    ]
+  },
+
+  "reasoning_bands": {
+    "_note": "Applied as a control token <effort=...> on reasoning-bearing samples. Shares are of reasoning-tagged tokens, not of the whole budget.",
+    "low":    {"token_budget": "0-64",       "share_of_reasoning_tokens": 0.30},
+    "medium": {"token_budget": "64-512",     "share_of_reasoning_tokens": 0.40},
+    "high":   {"token_budget": "512-4096",   "share_of_reasoning_tokens": 0.22},
+    "ultra":  {"token_budget": "4096-32768", "share_of_reasoning_tokens": 0.08}
+  },
+
+  "synthesis_plan": {
+    "_note": "Measured throughput comes from proxy/agentic_synth.py, which generates EXECUTION-GROUNDED traces (real commands, real stdout, real exit codes) rather than free-form LLM text.",
+    "agentic": {
+      "target_tokens_b": 178.2,
+      "generator": "execution-grounded rollout: seed task -> plan -> real shell/tool execution in a container -> real observation -> verify against assertion",
+      "accept_rate_assumption": 0.55,
+      "dedup_rate_assumption": 0.20
+    },
+    "indic_translated": {
+      "target_tokens_b": 115.2,
+      "generator": "IndicTrans2-class MT over STEM/code/web lane tokens, quality-gated by round-trip chrF++ and a native-speaker-audited sample"
+    },
+    "indic_synthetic": {
+      "target_tokens_b": 57.6,
+      "generator": "multi-turn native-script dialogue + Romanised code-mixed conversation, seeded from verified-tier documents"
+    }
+  }
+}

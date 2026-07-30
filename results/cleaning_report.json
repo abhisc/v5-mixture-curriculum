@@ -1,0 +1,79 @@
+{
+  "web": {
+    "lane": "web",
+    "docs_in": 629,
+    "docs_out": 610,
+    "bytes_in": 10796518,
+    "bytes_out": 10795629,
+    "dropped_short": 19,
+    "dropped_exact_dup": 0,
+    "dropped_near_dup": 0,
+    "reclassified_romanised": 0,
+    "dropped_repetitive": 0,
+    "scrubbed_docs": 0,
+    "notes": [],
+    "retention": 0.9698
+  },
+  "code": {
+    "lane": "code",
+    "docs_in": 1520,
+    "docs_out": 1516,
+    "bytes_in": 24558587,
+    "bytes_out": 24532725,
+    "dropped_short": 0,
+    "dropped_exact_dup": 0,
+    "dropped_near_dup": 1,
+    "reclassified_romanised": 0,
+    "dropped_repetitive": 3,
+    "scrubbed_docs": 0,
+    "notes": [],
+    "retention": 0.9974
+  },
+  "stem": {
+    "lane": "stem",
+    "docs_in": 8798,
+    "docs_out": 8796,
+    "bytes_in": 4430077,
+    "bytes_out": 4429957,
+    "dropped_short": 2,
+    "dropped_exact_dup": 0,
+    "dropped_near_dup": 0,
+    "reclassified_romanised": 0,
+    "dropped_repetitive": 0,
+    "scrubbed_docs": 0,
+    "notes": [],
+    "retention": 0.9998
+  },
+  "indic": {
+    "lane": "indic",
+    "docs_in": 5416,
+    "docs_out": 2731,
+    "bytes_in": 6679560,
+    "bytes_out": 5352297,
+    "dropped_short": 0,
+    "dropped_exact_dup": 0,
+    "dropped_near_dup": 0,
+    "reclassified_romanised": 2685,
+    "dropped_repetitive": 0,
+    "scrubbed_docs": 0,
+    "notes": [
+      "2685 documents reclassified from native-script to romanised tier"
+    ],
+    "retention": 0.5042
+  },
+  "agentic": {
+    "lane": "agentic",
+    "docs_in": 2600,
+    "docs_out": 2597,
+    "bytes_in": 2455947,
+    "bytes_out": 2394626,
+    "dropped_short": 0,
+    "dropped_exact_dup": 0,
+    "dropped_near_dup": 3,
+    "reclassified_romanised": 0,
+    "dropped_repetitive": 0,
+    "scrubbed_docs": 743,
+    "notes": [],
+    "retention": 0.9988
+  }
+}

@@ -1,0 +1,31 @@
+name: spec-consistency
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv venv --python 3.12 .venv
+
+      - name: Validate the spec
+        run: |
+          # No dependencies needed: the budget audit is pure standard library.
+          PYTHONPATH=scripts .venv/bin/python scripts/budget.py
+          PYTHONPATH=scripts .venv/bin/python scripts/synthesis_cost.py
+
+      - name: Fail if README tables drift from the config
+        run: |
+          PYTHONPATH=scripts .venv/bin/python scripts/build_tables.py --inject
+          if ! git diff --quiet -- README.md; then
+            echo "README tables are stale. Run 'make tables' and commit the result."
+            git diff -- README.md
+            exit 1
+          fi

@@ -1,0 +1,375 @@
+{
+  "_README": [
+    "Machine-readable token-supply inventory for the V5 mixture plan.",
+    "All token counts are in BILLIONS of tokens, measured with a ~100k BPE vocabulary.",
+    "",
+    "provenance:",
+    "  published - the number appears in the dataset card or the paper that released it.",
+    "  estimate  - we derived it (rows * mean-tokens-per-row, or subset fraction). Error bars in `confidence`.",
+    "  derived   - NOT new unique tokens. A re-packing / re-formatting of tokens already counted",
+    "              in another row. Contributes 0 to unique supply. Used for the long-context lane.",
+    "",
+    "overlap_discount: fraction of this dataset's tokens that we assume are already counted in",
+    "  another row of this inventory (near-duplicate across corpora). Effective unique supply is",
+    "  unique_tokens_b * (1 - overlap_discount). Sourced from published dedup rates where available,",
+    "  otherwise a deliberately conservative (high) guess so we under-claim supply rather than over-claim."
+  ],
+
+  "units": "billions_of_tokens",
+
+  "datasets": [
+    {
+      "id": "dclm_baseline",
+      "lane": "web",
+      "unique_tokens_b": 3800.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.10,
+      "license_class": "permissive_cc",
+      "notes": "DCLM-Baseline. Model-filtered CommonCrawl. Our MMLU/GPQA workhorse."
+    },
+    {
+      "id": "fineweb_edu",
+      "lane": "web",
+      "unique_tokens_b": 1300.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.55,
+      "license_class": "permissive_cc",
+      "notes": "Heavy overlap with DCLM (same CC substrate, different classifier). High discount is deliberate."
+    },
+    {
+      "id": "nemotron_cc_hq",
+      "lane": "web",
+      "unique_tokens_b": 1900.0,
+      "provenance": "published",
+      "confidence": "medium",
+      "overlap_discount": 0.50,
+      "license_class": "permissive_cc",
+      "notes": "High-quality subset of Nemotron-CC (6.3T total). Includes synthetic rephrasings of CC."
+    },
+    {
+      "id": "wikipedia_en",
+      "lane": "web",
+      "unique_tokens_b": 6.0,
+      "provenance": "estimate",
+      "confidence": "high",
+      "overlap_discount": 0.20,
+      "license_class": "permissive_cc",
+      "notes": "Small but disproportionately useful for MMLU-style factual recall."
+    },
+
+    {
+      "id": "stack_v2_permissive_dedup",
+      "lane": "code",
+      "unique_tokens_b": 900.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.00,
+      "license_class": "permissive_only",
+      "notes": "The Stack v2, permissive-licence subset, near-dedup applied. THE binding constraint on the code lane."
+    },
+    {
+      "id": "stack_edu",
+      "lane": "code",
+      "unique_tokens_b": 125.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 1.00,
+      "license_class": "permissive_only",
+      "notes": "Educational-quality filter OVER Stack v2. 100% discount: it is a subset, not new supply. Listed because it defines WHICH Stack v2 tokens we repeat."
+    },
+    {
+      "id": "code_docs_notebooks_issues",
+      "lane": "code",
+      "unique_tokens_b": 60.0,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.05,
+      "license_class": "mixed",
+      "notes": "StarCoder2-style extras: GitHub issues, PR threads, Jupyter notebooks, library documentation."
+    },
+    {
+      "id": "commitpackft",
+      "lane": "code",
+      "unique_tokens_b": 2.0,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.30,
+      "license_class": "permissive_only",
+      "notes": "Filtered commit-diff pairs. Directly shaped like the SWE-bench edit task."
+    },
+
+    {
+      "id": "megamath",
+      "lane": "stem",
+      "unique_tokens_b": 371.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.35,
+      "license_class": "permissive_cc",
+      "notes": "Largest open math pretraining corpus. Overlaps OpenWebMath and CC math."
+    },
+    {
+      "id": "finemath_3plus",
+      "lane": "stem",
+      "unique_tokens_b": 34.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.40,
+      "license_class": "permissive_cc",
+      "notes": "FineMath 3+. The 4+ subset (9.6B) is our Tier A anneal math."
+    },
+    {
+      "id": "openwebmath",
+      "lane": "stem",
+      "unique_tokens_b": 14.7,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.50,
+      "license_class": "permissive_cc",
+      "notes": "Subsumed in large part by MegaMath."
+    },
+    {
+      "id": "proof_pile_2",
+      "lane": "stem",
+      "unique_tokens_b": 55.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.15,
+      "license_class": "permissive_cc",
+      "notes": "AlgebraicStack + arXiv math + OpenWebMath. Formal-ish proofs, Lean/Isabelle."
+    },
+    {
+      "id": "arxiv_fulltext",
+      "lane": "stem",
+      "unique_tokens_b": 28.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.25,
+      "license_class": "mixed",
+      "notes": "Overlaps Proof-Pile-2's arXiv slice."
+    },
+    {
+      "id": "pes2o",
+      "lane": "stem",
+      "unique_tokens_b": 42.0,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.20,
+      "license_class": "permissive_cc",
+      "notes": "S2ORC-derived scientific papers. Primary GPQA-Diamond feedstock."
+    },
+    {
+      "id": "long_cot_distill_pool",
+      "lane": "stem",
+      "unique_tokens_b": 37.0,
+      "provenance": "estimate",
+      "confidence": "low",
+      "overlap_discount": 0.30,
+      "license_class": "mixed",
+      "notes": "Open long-chain-of-thought traces: OpenThoughts-3 (~5B), Nemotron post-training reasoning (~25B), OpenR1-Math-220k (~1.2B), AM-DeepSeek-R1-Distill-1.4M (~6B). Heavy cross-distillation overlap; 30% discount is optimistic and flagged as such."
+    },
+
+    {
+      "id": "sangraha_verified",
+      "lane": "indic",
+      "indic_tier": "verified",
+      "unique_tokens_b": 74.7,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.05,
+      "license_class": "mixed",
+      "notes": "AI4Bharat Sangraha, human/heuristic-verified native tier. 22 languages. The single most valuable Indic asset that exists."
+    },
+    {
+      "id": "sangraha_unverified",
+      "lane": "indic",
+      "indic_tier": "unverified",
+      "unique_tokens_b": 129.7,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.25,
+      "license_class": "mixed",
+      "notes": "Sangraha unverified native tier: perplexity/LID-filtered web crawl, not human-audited."
+    },
+    {
+      "id": "sangraha_synthetic_romanised",
+      "lane": "indic",
+      "indic_tier": "synthetic",
+      "unique_tokens_b": 46.6,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.10,
+      "license_class": "mixed",
+      "notes": "Romanised/transliterated tier. Matters because a large share of real Indian user input is Romanised."
+    },
+    {
+      "id": "indiccorp_v2",
+      "lane": "indic",
+      "indic_tier": "unverified",
+      "unique_tokens_b": 20.9,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.45,
+      "license_class": "mixed",
+      "notes": "24 languages. Substantially re-crawled into Sangraha, hence the large discount."
+    },
+    {
+      "id": "varta_news",
+      "lane": "indic",
+      "indic_tier": "verified",
+      "unique_tokens_b": 1.3,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.20,
+      "license_class": "research_only",
+      "notes": "14 Indic languages + English, DailyHunt news. Editorially clean = verified tier."
+    },
+    {
+      "id": "indic_wikipedia_books_gov",
+      "lane": "indic",
+      "indic_tier": "verified",
+      "unique_tokens_b": 3.1,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.15,
+      "license_class": "mixed",
+      "notes": "Indic Wikipedias, public-domain books, government gazettes/parliamentary records."
+    },
+    {
+      "id": "madlad400_indic",
+      "lane": "indic",
+      "indic_tier": "unverified",
+      "unique_tokens_b": 30.0,
+      "provenance": "estimate",
+      "confidence": "low",
+      "overlap_discount": 0.55,
+      "license_class": "permissive_cc",
+      "notes": "Indic slice of MADLAD-400. Known LID noise; large overlap with Sangraha unverified."
+    },
+    {
+      "id": "bpcc_samanantar_parallel",
+      "lane": "indic",
+      "indic_tier": "translated",
+      "unique_tokens_b": 2.5,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.10,
+      "license_class": "permissive_cc",
+      "notes": "Human/mined parallel corpora. NOT bulk translation supply - it is the SEED and QUALITY ANCHOR that lets us trust machine-translated tokens."
+    },
+
+    {
+      "id": "toolbench",
+      "lane": "agentic",
+      "unique_tokens_b": 0.08,
+      "provenance": "estimate",
+      "confidence": "high",
+      "overlap_discount": 0.0,
+      "license_class": "research_only",
+      "notes": "~126k multi-step API dialogues. The largest single natural agentic corpus we could find."
+    },
+    {
+      "id": "xlam_apigen_60k",
+      "lane": "agentic",
+      "unique_tokens_b": 0.03,
+      "provenance": "estimate",
+      "confidence": "high",
+      "overlap_discount": 0.10,
+      "license_class": "permissive_cc",
+      "notes": "Verified function-calling data. BFCL-shaped."
+    },
+    {
+      "id": "glaive_function_calling_v2",
+      "lane": "agentic",
+      "unique_tokens_b": 0.06,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.20,
+      "license_class": "permissive_cc",
+      "notes": "Single-turn heavy. Teaches schema adherence, not long-horizon planning."
+    },
+    {
+      "id": "toolace",
+      "lane": "agentic",
+      "unique_tokens_b": 0.02,
+      "provenance": "estimate",
+      "confidence": "medium",
+      "overlap_discount": 0.15,
+      "license_class": "research_only",
+      "notes": "Complex/nested tool schemas."
+    },
+    {
+      "id": "agentinstruct_pool",
+      "lane": "agentic",
+      "unique_tokens_b": 0.90,
+      "provenance": "estimate",
+      "confidence": "low",
+      "overlap_discount": 0.30,
+      "license_class": "mixed",
+      "notes": "AgentInstruct-style 1M-instruction pools. Mostly single-tool; weak long-horizon signal."
+    },
+    {
+      "id": "swe_trajectories",
+      "lane": "agentic",
+      "unique_tokens_b": 0.40,
+      "provenance": "estimate",
+      "confidence": "low",
+      "overlap_discount": 0.10,
+      "license_class": "mixed",
+      "notes": "SWE-Gym / SWE-smith / R2E-Gym rollouts. Execution-verified, highest value per token in the lane."
+    },
+    {
+      "id": "terminal_session_logs_natural",
+      "lane": "agentic",
+      "unique_tokens_b": 0.01,
+      "provenance": "estimate",
+      "confidence": "low",
+      "overlap_discount": 0.0,
+      "license_class": "mixed",
+      "notes": "Genuinely public shell-session transcripts (asciinema, tutorials). Effectively nil."
+    },
+
+    {
+      "id": "pg19_books",
+      "lane": "longctx",
+      "unique_tokens_b": 1.9,
+      "provenance": "published",
+      "confidence": "high",
+      "overlap_discount": 0.10,
+      "license_class": "public_domain",
+      "notes": "Natively long documents. One of the few true long-context token sources."
+    },
+    {
+      "id": "repo_packed_stack_v2",
+      "lane": "longctx",
+      "unique_tokens_b": 0.0,
+      "provenance": "derived",
+      "confidence": "high",
+      "overlap_discount": 0.0,
+      "license_class": "permissive_only",
+      "notes": "Whole-repository packing (dependency-ordered file concatenation) of Stack v2. ZERO new unique tokens - it is a packing STRATEGY over code-lane tokens. Counted in the code lane's supply, not here."
+    },
+    {
+      "id": "long_arxiv_pes2o_packed",
+      "lane": "longctx",
+      "unique_tokens_b": 0.0,
+      "provenance": "derived",
+      "confidence": "high",
+      "overlap_discount": 0.0,
+      "license_class": "mixed",
+      "notes": "Full-paper (not chunked) arXiv/peS2o. Re-packing of STEM-lane tokens."
+    },
+    {
+      "id": "synthetic_long_agentic_sessions",
+      "lane": "longctx",
+      "unique_tokens_b": 0.0,
+      "provenance": "derived",
+      "confidence": "high",
+      "overlap_discount": 0.0,
+      "license_class": "self_generated",
+      "notes": "Long agentic rollouts packed to 32-128k. Generated by the agentic synthesis pipeline; budgeted in the agentic lane."
+    }
+  ]
+}
