@@ -60,9 +60,13 @@ def lane_supply(inventory: dict) -> dict[str, LaneSupply]:
         raw = ds["unique_tokens_b"]
         effective = raw * (1.0 - ds["overlap_discount"])
         sup.raw_tokens_b += raw
+        # Synthetic / translated Indic tiers are inventory we already hold, but they are
+        # not "natural crawl" for epoch maths — the lane's synthesis_fraction covers them.
+        indic_tier = ds.get("indic_tier")
+        non_natural = indic_tier in {"synthetic", "translated"}
         if ds["provenance"] == "derived":
             sup.derived_tokens_b += raw
-        else:
+        elif not non_natural:
             sup.unique_tokens_b += effective
         sup.datasets.append(ds)
     return out
@@ -160,14 +164,28 @@ def audit(inventory: dict, mixture: dict) -> dict:
             # length, and is charged to those lanes instead.
             nat_target = native_only[name]
             repacked_in = allocated - nat_target
-            syn_target = 0.0
+            syn_budget = 0.0
+            must_generate = 0.0
         else:
-            syn_target = allocated * syn_frac
-            nat_target = allocated - syn_target
+            syn_budget = allocated * syn_frac
+            nat_target = allocated - syn_budget
+            # Default: the whole synthetic slice must be produced. For tiered lanes
+            # (Indic), credit already-catalogued non-natural supply per tier so the
+            # residual is the true generation bill (excess Sangraha synthetic must not
+            # silently fill the translated/MT tier).
+            must_generate = syn_budget
+            tiers = cfg.get("tiers")
+            if tiers:
+                tier_have = indic_tier_supply(inventory)
+                must_generate = sum(
+                    max(0.0, allocated * tcfg["share"] - tier_have.get(tier, 0.0))
+                    for tier, tcfg in tiers.items()
+                    if not tcfg.get("natural", True)
+                )
 
         # Tokens lent to a re-packed lane come out of this lane's natural and synthetic
         # pools in the same ratio as the lane itself. Long agentic sessions are synthesised,
-        # so they must not be charged against the lane's 1.2B of natural data.
+        # so they must not be charged against the lane's natural data.
         lent_out = borrowed[name]
         lent_natural = lent_out * (1.0 - syn_frac)
         lent_synthetic = lent_out * syn_frac
@@ -183,7 +201,8 @@ def audit(inventory: dict, mixture: dict) -> dict:
         eff_rates[name] = rate * (1.0 - syn_frac) + syn_frac
         # A lane's effective total covers only the tokens its OWN budget line spends.
         # Lent tokens are spent by the borrowing lane and are counted there.
-        eff = rate * nat_target + syn_target
+        # Catalogued synthetic (Sangraha synthetic etc.) still counts as fresh spend.
+        eff = rate * nat_target + syn_budget
         if repacked_in > 0:
             sm = cfg["supply_model"]
             eff += sum(
@@ -208,7 +227,7 @@ def audit(inventory: dict, mixture: dict) -> dict:
             allocated_b=allocated,
             natural_unique_b=nat_unique,
             synthesis_fraction=syn_frac,
-            synthetic_target_b=syn_target + lent_synthetic,
+            synthetic_target_b=must_generate + lent_synthetic,
             natural_target_b=nat_target,
             repacked_in_b=repacked_in,
             lent_out_b=lent_out,

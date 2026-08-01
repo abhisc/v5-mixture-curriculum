@@ -1,59 +1,166 @@
 13 runs planned: 1200 steps x 32 x 384 = 14.7M tokens each
 
-[1/13] v5_s0  mixture={'web': 0.35, 'code': 0.32, 'stem': 0.18, 'indic': 0.08, 'agentic': 0.05, 'longctx': 0.02}
-    [v5] step     0/1200  loss 5.5381  gn 19.03     0.8s
-    [v5] step   100/1200  loss 2.4416  gn 1.19    31.5s
-    [v5] step   200/1200  loss 2.5241  gn 1.01    65.9s
-    [v5] step   300/1200  loss 2.3525  gn 0.58   101.1s
-    [v5] step   400/1200  loss 2.2145  gn 0.72   136.5s
-    [v5] step   500/1200  loss 2.0062  gn 1.00   176.6s
-    [v5] step   600/1200  loss 1.8807  gn 1.39   219.0s
-    [v5] step   700/1200  loss 1.7249  gn 1.15   266.5s
-    [v5] step   800/1200  loss 1.6368  gn 1.12   316.4s
-    [v5] step   900/1200  loss 1.6652  gn 1.19   372.8s
-    [v5] step  1000/1200  loss 1.5517  gn 1.30   432.0s
-    [v5] step  1100/1200  loss 1.4818  gn 1.41   488.7s
-    [v5] step  1199/1200  loss 1.4313  gn 1.45   544.7s
-    done in 556.9s   elapsed 9.3m   eta 111.5m
-
-[2/13] v5_s1  mixture={'web': 0.35, 'code': 0.32, 'stem': 0.18, 'indic': 0.08, 'agentic': 0.05, 'longctx': 0.02}
-    [v5] step     0/1200  loss 5.5980  gn 20.76     0.6s
-    [v5] step   100/1200  loss 2.4175  gn 0.74    46.4s
-    [v5] step   200/1200  loss 2.4003  gn 0.59    94.0s
-    [v5] step   300/1200  loss 2.3151  gn 0.60   139.9s
-    [v5] step   400/1200  loss 2.1746  gn 0.81   185.3s
-    [v5] step   500/1200  loss 2.0587  gn 1.42   230.3s
-    [v5] step   600/1200  loss 1.8373  gn 1.65   276.7s
-    [v5] step   700/1200  loss 1.7586  gn 1.36   323.5s
-    [v5] step   800/1200  loss 1.6393  gn 1.39   372.4s
-    [v5] step   900/1200  loss 1.5593  gn 1.30   425.2s
-    [v5] step  1000/1200  loss 1.4467  gn 1.27   477.0s
-    [v5] step  1100/1200  loss 1.4204  gn 1.32   526.6s
-    [v5] step  1199/1200  loss 1.4666  gn 1.19   574.6s
-    done in 585.7s   elapsed 19.1m   eta 104.8m
-
-[3/13] opus_greedy_s0  mixture={'web': 0.42, 'code': 0.37, 'stem': 0.18, 'indic': 0.005, 'agentic': 0.005, 'longctx': 0.02}
-    [opus_greedy] step     0/1200  loss 5.4797  gn 21.74     0.4s
-    [opus_greedy] step   100/1200  loss 2.5286  gn 0.60    48.1s
-    [opus_greedy] step   200/1200  loss 2.4540  gn 0.53    94.3s
-    [opus_greedy] step   300/1200  loss 2.3705  gn 0.66   140.7s
-    [opus_greedy] step   400/1200  loss 2.2631  gn 1.03   186.6s
-    [opus_greedy] step   500/1200  loss 2.0176  gn 1.10   232.0s
-    [opus_greedy] step   600/1200  loss 1.9034  gn 1.12   277.8s
-    [opus_greedy] step   700/1200  loss 1.7222  gn 1.31   324.1s
-    [opus_greedy] step   800/1200  loss 1.7037  gn 1.38   370.1s
-    [opus_greedy] step   900/1200  loss 1.6529  gn 1.48   416.5s
-    [opus_greedy] step  1000/1200  loss 1.6441  gn 1.40   463.0s
-    [opus_greedy] step  1100/1200  loss 1.5236  gn 1.24   509.4s
-    [opus_greedy] step  1199/1200  loss 1.5431  gn 1.18   555.0s
-    done in 565.2s   elapsed 28.5m   eta 94.9m
-
+[1/13] v5_s0 already done, skipping
+[2/13] v5_s1 already done, skipping
+[3/13] opus_greedy_s0 already done, skipping
 [4/13] opus_greedy_s1  mixture={'web': 0.42, 'code': 0.37, 'stem': 0.18, 'indic': 0.005, 'agentic': 0.005, 'longctx': 0.02}
-    [opus_greedy] step     0/1200  loss 5.6385  gn 20.52     0.5s
-    [opus_greedy] step   100/1200  loss 2.5530  gn 0.90    47.0s
-    [opus_greedy] step   200/1200  loss 2.5037  gn 0.82    92.8s
-    [opus_greedy] step   300/1200  loss 2.3609  gn 0.74   139.4s
-    [opus_greedy] step   400/1200  loss 2.2088  gn 1.47   186.4s
-    [opus_greedy] step   500/1200  loss 2.0160  gn 1.39   232.0s
-    [opus_greedy] step   600/1200  loss 1.9609  gn 1.03   277.1s
-    [opus_greedy] step   700/1200  loss 1.8917  gn 1.29   322.2s
+    [opus_greedy] step     0/1200  loss 5.6385  gn 20.52     1.0s
+    [opus_greedy] step   100/1200  loss 2.5530  gn 0.90    29.0s
+    [opus_greedy] step   200/1200  loss 2.5037  gn 0.82    56.9s
+    [opus_greedy] step   300/1200  loss 2.3609  gn 0.74    85.1s
+    [opus_greedy] step   400/1200  loss 2.2088  gn 1.47   114.0s
+    [opus_greedy] step   500/1200  loss 2.0160  gn 1.39   142.7s
+    [opus_greedy] step   600/1200  loss 1.9609  gn 1.03   171.5s
+    [opus_greedy] step   700/1200  loss 1.8916  gn 1.29   200.5s
+    [opus_greedy] step   800/1200  loss 1.7052  gn 1.20   229.6s
+    [opus_greedy] step   900/1200  loss 1.5907  gn 1.19   258.8s
+    [opus_greedy] step  1000/1200  loss 1.5699  gn 1.34   288.2s
+    [opus_greedy] step  1100/1200  loss 1.4529  gn 1.13   318.8s
+    [opus_greedy] step  1199/1200  loss 1.5086  gn 1.25   349.9s
+    done in 357.2s   elapsed 6.0m   eta 13.4m
+
+[5/13] indic_00_s0  mixture={'web': 0.43, 'code': 0.32, 'stem': 0.18, 'indic': 0.0, 'agentic': 0.05, 'longctx': 0.02}
+    [indic_00] step     0/1200  loss 5.4938  gn 21.48     0.5s
+    [indic_00] step   100/1200  loss 2.6066  gn 0.74    33.1s
+    [indic_00] step   200/1200  loss 2.4388  gn 0.71    66.6s
+    [indic_00] step   300/1200  loss 2.3750  gn 0.82    99.8s
+    [indic_00] step   400/1200  loss 2.1825  gn 1.06   133.2s
+    [indic_00] step   500/1200  loss 2.0377  gn 1.11   166.5s
+    [indic_00] step   600/1200  loss 1.8202  gn 1.10   200.0s
+    [indic_00] step   700/1200  loss 1.7668  gn 1.26   233.5s
+    [indic_00] step   800/1200  loss 1.5746  gn 1.33   267.5s
+    [indic_00] step   900/1200  loss 1.6165  gn 1.20   301.5s
+    [indic_00] step  1000/1200  loss 1.4363  gn 1.24   335.9s
+    [indic_00] step  1100/1200  loss 1.4665  gn 1.25   370.9s
+    [indic_00] step  1199/1200  loss 1.3616  gn 1.33   405.0s
+    done in 412.6s   elapsed 12.8m   eta 20.6m
+
+[6/13] indic_02_s0  mixture={'web': 0.41, 'code': 0.32, 'stem': 0.18, 'indic': 0.02, 'agentic': 0.05, 'longctx': 0.02}
+    [indic_02] step     0/1200  loss 5.4934  gn 21.41     0.4s
+    [indic_02] step   100/1200  loss 2.6410  gn 0.63    34.8s
+    [indic_02] step   200/1200  loss 2.4845  gn 0.65    69.4s
+    [indic_02] step   300/1200  loss 2.2964  gn 0.59   104.4s
+    [indic_02] step   400/1200  loss 2.2930  gn 0.97   990.8s
+    [indic_02] step   500/1200  loss 2.0671  gn 0.99  1018.1s
+    [indic_02] step   600/1200  loss 1.9456  gn 1.08  1045.7s
+    [indic_02] step   700/1200  loss 1.7923  gn 1.58  1073.8s
+    [indic_02] step   800/1200  loss 1.5800  gn 1.21  1305.5s
+    [indic_02] step   900/1200  loss 1.7644  gn 1.30  2334.8s
+    [indic_02] step  1000/1200  loss 1.5891  gn 1.52  2580.9s
+    [indic_02] step  1100/1200  loss 1.5417  gn 1.33  2608.3s
+    [indic_02] step  1199/1200  loss 1.4518  gn 1.32  2635.8s
+    done in 2642.1s   elapsed 56.9m   eta 66.4m
+
+[7/13] indic_04_s0  mixture={'web': 0.39, 'code': 0.32, 'stem': 0.18, 'indic': 0.04, 'agentic': 0.05, 'longctx': 0.02}
+    [indic_04] step     0/1200  loss 5.4881  gn 21.54     0.3s
+    [indic_04] step   100/1200  loss 2.6238  gn 0.91    28.6s
+    [indic_04] step   200/1200  loss 2.4018  gn 0.68  1513.5s
+    [indic_04] step   300/1200  loss 2.2542  gn 0.65  1540.9s
+    [indic_04] step   400/1200  loss 2.2546  gn 1.21  1568.2s
+    [indic_04] step   500/1200  loss 2.1037  gn 0.88  1596.1s
+    [indic_04] step   600/1200  loss 1.9236  gn 1.12  1624.3s
+    [indic_04] step   700/1200  loss 1.7817  gn 1.50  1652.8s
+    [indic_04] step   800/1200  loss 1.6680  gn 1.21  1682.0s
+    [indic_04] step   900/1200  loss 1.5932  gn 1.09  1710.7s
+    [indic_04] step  1000/1200  loss 1.5480  gn 1.19  1739.6s
+    [indic_04] step  1100/1200  loss 1.5711  gn 1.17  2410.4s
+    [indic_04] step  1199/1200  loss 1.4538  gn 1.24  2437.6s
+    done in 2443.5s   elapsed 97.6m   eta 83.7m
+
+[8/13] indic_16_s0  mixture={'web': 0.27, 'code': 0.32, 'stem': 0.18, 'indic': 0.16, 'agentic': 0.05, 'longctx': 0.02}
+    [indic_16] step     0/1200  loss 5.5660  gn 18.25     0.4s
+    [indic_16] step   100/1200  loss 2.5066  gn 1.22    27.8s
+    [indic_16] step   200/1200  loss 2.3858  gn 0.53    55.8s
+    [indic_16] step   300/1200  loss 2.1632  gn 0.57  2876.8s
+    [indic_16] step   400/1200  loss 2.1136  gn 0.71  2904.1s
+    [indic_16] step   500/1200  loss 2.1810  gn 1.50  2931.5s
+    [indic_16] step   600/1200  loss 1.8484  gn 1.15  2959.0s
+    [indic_16] step   700/1200  loss 1.8058  gn 1.19  2986.9s
+    [indic_16] step   800/1200  loss 1.6220  gn 1.14  3015.2s
+    [indic_16] step   900/1200  loss 1.4872  gn 1.38  3044.4s
+    [indic_16] step  1000/1200  loss 1.5478  gn 1.48  3072.6s
+    [indic_16] step  1100/1200  loss 1.4873  gn 1.27  3101.1s
+    [indic_16] step  1199/1200  loss 1.4828  gn 1.14  3793.1s
+    done in 3799.1s   elapsed 160.9m   eta 100.6m
+
+[9/13] agentic_00_s0  mixture={'web': 0.4, 'code': 0.32, 'stem': 0.18, 'indic': 0.08, 'agentic': 0.0, 'longctx': 0.02}
+    [agentic_00] step     0/1200  loss 5.4934  gn 21.41     0.4s
+    [agentic_00] step   100/1200  loss 2.5930  gn 1.15    27.8s
+    [agentic_00] step   200/1200  loss 2.2688  gn 0.55    55.3s
+    [agentic_00] step   300/1200  loss 2.3245  gn 0.48   582.3s
+    [agentic_00] step   400/1200  loss 2.1389  gn 0.85   609.7s
+    [agentic_00] step   500/1200  loss 2.0352  gn 0.97   637.5s
+    [agentic_00] step   600/1200  loss 1.9567  gn 1.09   666.9s
+    [agentic_00] step   700/1200  loss 1.7458  gn 1.00   696.8s
+    [agentic_00] step   800/1200  loss 1.7848  gn 1.06   727.1s
+    [agentic_00] step   900/1200  loss 1.7024  gn 1.19   760.0s
+    [agentic_00] step  1000/1200  loss 1.5680  gn 1.25   801.8s
+    [agentic_00] step  1100/1200  loss 1.5606  gn 1.16   844.4s
+    [agentic_00] step  1199/1200  loss 1.5436  gn 1.19  1393.2s
+    done in 1399.2s   elapsed 184.3m   eta 81.9m
+
+[10/13] agentic_02_s0  mixture={'web': 0.38, 'code': 0.32, 'stem': 0.18, 'indic': 0.08, 'agentic': 0.02, 'longctx': 0.02}
+    [agentic_02] step     0/1200  loss 5.5001  gn 20.79     0.3s
+    [agentic_02] step   100/1200  loss 2.5295  gn 1.08    27.6s
+    [agentic_02] step   200/1200  loss 2.3907  gn 0.74    55.9s
+    [agentic_02] step   300/1200  loss 2.3239  gn 0.64    84.8s
+    [agentic_02] step   400/1200  loss 2.1615  gn 0.79   114.7s
+    [agentic_02] step   500/1200  loss 2.0750  gn 1.20   150.2s
+    [agentic_02] step   600/1200  loss 1.8945  gn 1.15   199.3s
+    [agentic_02] step   700/1200  loss 1.7802  gn 1.11   249.2s
+    [agentic_02] step   800/1200  loss 1.6663  gn 1.14   291.2s
+    [agentic_02] step   900/1200  loss 1.6343  gn 1.34   332.0s
+    [agentic_02] step  1000/1200  loss 1.4994  gn 1.30   373.2s
+    [agentic_02] step  1100/1200  loss 1.4635  gn 1.24   414.8s
+    [agentic_02] step  1199/1200  loss 1.4535  gn 1.10   456.4s
+    done in 465.5s   elapsed 192.0m   eta 57.6m
+
+[11/13] agentic_10_s0  mixture={'web': 0.3, 'code': 0.32, 'stem': 0.18, 'indic': 0.08, 'agentic': 0.1, 'longctx': 0.02}
+    [agentic_10] step     0/1200  loss 5.5204  gn 18.82     0.4s
+    [agentic_10] step   100/1200  loss 2.5589  gn 0.75    43.2s
+    [agentic_10] step   200/1200  loss 2.4719  gn 0.62    85.8s
+    [agentic_10] step   300/1200  loss 2.2588  gn 0.66   151.6s
+    [agentic_10] step   400/1200  loss 2.0541  gn 0.97   179.1s
+    [agentic_10] step   500/1200  loss 1.8394  gn 0.98   208.8s
+    [agentic_10] step   600/1200  loss 1.7795  gn 1.06   258.6s
+    [agentic_10] step   700/1200  loss 1.6502  gn 1.38   338.8s
+    [agentic_10] step   800/1200  loss 1.7363  gn 1.23   387.0s
+    [agentic_10] step   900/1200  loss 1.6481  gn 1.51   431.8s
+    [agentic_10] step  1000/1200  loss 1.4564  gn 1.10   475.4s
+    [agentic_10] step  1100/1200  loss 1.4535  gn 1.38   519.9s
+    [agentic_10] step  1199/1200  loss 1.4614  gn 1.37   564.4s
+    done in 574.0s   elapsed 201.6m   eta 36.7m
+
+[12/13] indic_only_s0  mixture={'indic': 1.0}
+    [indic_only] step     0/1200  loss 5.6874  gn 33.52     0.4s
+    [indic_only] step   100/1200  loss 1.3493  gn 0.49    46.5s
+    [indic_only] step   200/1200  loss 1.2879  gn 0.71    91.0s
+    [indic_only] step   300/1200  loss 1.1085  gn 0.70   136.2s
+    [indic_only] step   400/1200  loss 1.0824  gn 0.50   180.7s
+    [indic_only] step   500/1200  loss 0.9153  gn 0.62   224.8s
+    [indic_only] step   600/1200  loss 0.9093  gn 0.54   265.8s
+    [indic_only] step   700/1200  loss 0.8618  gn 0.59  1401.6s
+    [indic_only] step   800/1200  loss 0.9090  gn 0.62  1463.6s
+    [indic_only] step   900/1200  loss 0.8049  gn 0.59  1491.2s
+    [indic_only] step  1000/1200  loss 0.8054  gn 0.64  1519.2s
+    [indic_only] step  1100/1200  loss 0.7748  gn 0.66  1548.2s
+    [indic_only] step  1199/1200  loss 0.7957  gn 0.69  1585.0s
+    done in 1598.0s   elapsed 228.2m   eta 19.0m
+
+[13/13] agentic_only_s0  mixture={'agentic': 1.0}
+    [agentic_only] step     0/1200  loss 5.5404  gn 14.84     0.6s
+    [agentic_only] step   100/1200  loss 1.6073  gn 2.20  1989.1s
+    [agentic_only] step   200/1200  loss 0.3091  gn 1.67  14260.2s
+    [agentic_only] step   300/1200  loss 0.1646  gn 0.85  14296.8s
+    [agentic_only] step   400/1200  loss 0.1729  gn 0.80  14324.5s
+    [agentic_only] step   500/1200  loss 0.1463  gn 0.40  14352.5s
+    [agentic_only] step   600/1200  loss 0.1443  gn 0.37  14380.8s
+    [agentic_only] step   700/1200  loss 0.1213  gn 0.45  14409.5s
+    [agentic_only] step   800/1200  loss 0.0865  gn 0.36  14438.5s
+    [agentic_only] step   900/1200  loss 0.0803  gn 0.26  14467.3s
+    [agentic_only] step  1000/1200  loss 0.0701  gn 0.31  14496.3s
+    [agentic_only] step  1100/1200  loss 0.0736  gn 0.12  14525.5s
+    [agentic_only] step  1199/1200  loss 0.0686  gn 0.16  14554.3s
+    done in 14561.0s   elapsed 470.9m   eta 0.0m
+
+all runs complete in 470.9 minutes -> /Users/abhi/Projects/v5-mixture-curriculum/results/ablation.json

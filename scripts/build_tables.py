@@ -79,19 +79,38 @@ def t_indic(inv, mix, a) -> str:
         "| Tier | Share of Indic slot | Tokens | Natural supply available | Gap to close | How the gap is closed |",
         "|---|---:|---:|---:|---:|---|",
     ]
-    how = {
-        "verified": "None needed. We select the best 28.8B of 74.6B, so we can afford to be picky.",
-        "unverified": "None needed. 35.9B of headroom is held as contingency if the MT gate rejects more than planned.",
-        "translated": "IndicTrans2-class MT over STEM and instruction tokens, round-trip chrF++ gated.",
-        "synthetic": "Romanised Sangraha tier plus generated native-script multi-turn dialogue.",
-    }
     for tier, cfg in indic["tiers"].items():
         tokens = alloc * cfg["share"]
         avail = supply.get(tier, 0.0)
         gap = max(0.0, tokens - avail)
+        headroom = max(0.0, avail - tokens)
+        if tier == "verified" and gap <= 0:
+            how = (
+                f"None needed. We select the best {fmt_b(tokens)} of {fmt_b(avail)}, "
+                "so we can afford to be picky."
+            )
+        elif tier == "unverified" and gap <= 0:
+            how = (
+                f"None needed. {fmt_b(headroom)} of headroom is held as contingency "
+                "if the MT gate rejects more than planned."
+            )
+        elif tier == "unverified":
+            how = (
+                "SOTA inventory unverified crawl is thin; gap closed by up-weighting "
+                "Sangraha synthetic and MT rather than inventing more crawl."
+            )
+        elif tier == "translated":
+            how = "IndicTrans2-class MT over STEM and instruction tokens, round-trip chrF++ gated."
+        elif tier == "synthetic":
+            how = (
+                "Sangraha synthetic tier from the SOTA inventory, plus a small "
+                "native-script multi-turn dialogue top-up if selection rejects noisy shards."
+            )
+        else:
+            how = "See inventory notes."
         rows.append(
             f"| {tier.capitalize()} | {cfg['share']*100:.0f}% | {fmt_b(tokens)} | {fmt_b(avail)} | "
-            f"{'none' if gap <= 0 else fmt_b(gap)} | {how[tier]} |"
+            f"{'none' if gap <= 0 else fmt_b(gap)} | {how} |"
         )
     rows.append(f"| **Total** | **100%** | **{fmt_b(alloc)}** | | | |")
     return "\n".join(rows)
@@ -106,7 +125,7 @@ def t_floors(inv, mix) -> str:
         "web": "No floor. OPUS over-selects web by default; it needs a ceiling, not a floor.",
         "code": "Stops a mid-run reasoning spike from cannibalising SWE-bench capability.",
         "stem": "Long-CoT tokens look high-loss and get down-weighted by loss-based selectors.",
-        "indic": "The binding constraint. Measured: cutting Indic to 0.5% costs 1.47 bits of Indic BPB to buy 0.04 bits of web BPB.",
+        "indic": "The binding constraint. Measured: cutting Indic to 0.5% costs 1.57 bits of Indic BPB to buy 0.05 bits of web BPB.",
         "agentic": "Measured: at 0.5% the model can no longer emit a well-formed tool call (structure score 0.03 vs 0.80). Terminal output looks like noise to a loss-based selector.",
         "longctx": "Prevents long packs being dropped for throughput reasons once sequence length rises.",
     }

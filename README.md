@@ -1,5 +1,8 @@
 # V5 Mixture and Curriculum Specification
 
+> New to this field? Start with the beginner walkthrough:
+> [`LEARNING_GUIDE.md`](LEARNING_GUIDE.md).
+
 A 4.0T-token data plan for a model that must win on **coding**, **agentic workflows**,
 **controllable reasoning**, and **native Indic languages** — four capabilities that
 compete for the same fixed budget.
@@ -9,12 +12,12 @@ and [`inventory/mixture.json`](inventory/mixture.json) by [`scripts/build_tables
 Nothing is hand-typed, and `make check` fails if the spec stops being internally consistent.
 
 **The mixture was tested, not just asserted.** A 10.7M-parameter proxy was trained on real
-corpora, one run per candidate mixture, to measure what the protected floors actually buy.
-The headline result: removing the floors gains **0.041 bits** on the general lane and
-loses **1.47 bits** on Indic and **1.90 bits** on agentic.
+corpora across **13 runs** (11 arms), to measure what the protected floors actually buy.
+The headline result: removing the floors gains **0.049 bits** on the general lane and
+loses **1.57 bits** on Indic and **1.88 bits** on agentic. The Indic share sweep shows a
+sharp knee by 2%, with diminishing returns through 8%→16%.
 [Section VIII](#viii-proxy-experiment-hypothesis-and-measured-results) reports the numbers,
-including the one that contradicted our expectations and changed the spec, and states
-plainly which hypotheses remain untested.
+including the one that contradicted our expectations and changed the spec.
 
 ---
 
@@ -71,9 +74,9 @@ re-weighting of abundant data.
 | Lane | Share | Tokens | Benchmarks this lane must win | Supply verdict |
 |---|---:|---:|---|---|
 | General web | 35% | 1.26T | MMLU, MMLU-Pro, GPQA-Diamond, HellaSwag | MET with unique tokens |
-| Specialist code | 32% | 1.15T | SWE-bench Verified, LiveCodeBench, HumanEval+, MultiPL-E | MET by repetition (1.24 epochs) |
-| STEM / reasoning | 18% | 648.0B | AIME, MATH-500, GPQA-Diamond, ARC-AGI | MET by repetition (1.43 epochs) |
-| Native Indic | 8% | 288.0B | IndicMMLU-Pro, MILU, IndicGenBench, Indic-XNLI, IN22 (chrF++) | SYNTHESIS-DEPENDENT (60% generated) |
+| Specialist code | 32% | 1.15T | SWE-bench Verified, LiveCodeBench, HumanEval+, MultiPL-E | MET by repetition (1.30 epochs) |
+| STEM / reasoning | 18% | 648.0B | AIME, MATH-500, GPQA-Diamond, ARC-AGI | MET by repetition (3.60 epochs) |
+| Native Indic | 8% | 288.0B | IndicMMLU-Pro, MILU, IndicGenBench, Indic-XNLI, IN22 (chrF++) | SYNTHESIS-DEPENDENT (80% generated) |
 | Agentic / tool-use | 5% | 180.0B | Terminal-Bench, BFCL v3, SWE-bench Verified (agent scaffold), tau-bench | SYNTHESIS-DEPENDENT (99% generated) |
 | Long context | 2% | 72.0B | RULER 128k, LongBench v2, repo-level SWE-bench | RE-PACKED (66B borrowed, 5.8B native) |
 | **Total pre-training** | **100%** | **3.60T** | | |
@@ -82,20 +85,20 @@ re-weighting of abundant data.
 ### Why each number
 
 **General web — 35% (1.26T).** This is a *floor on knowledge retention*, not an
-aspiration. Web is our cheapest lane by far (4.96T unique available, so we run it at
-0.25 epochs and can select the top quartile by classifier score). We cut it from a
-conventional ~60–70% because the marginal MMLU point from web tokens 1.26T→2.0T is
-small, while the same tokens moved into code and Indic buy capabilities that no amount
-of web data produces. We do not cut it below 35%: the proxy run shows a measurable
-general-lane cost even at these ratios, and MMLU regressions are hard to recover in
-post-training because they are knowledge, not skill.
+aspiration. Web is our cheapest lane by far (~3.0T unique after overlap discounts on
+DCLM + FineWeb-Edu, so we run it at well under one epoch and can select the top quartile
+by classifier score). We cut it from a conventional ~60–70% because the marginal MMLU
+point from web tokens 1.26T→2.0T is small, while the same tokens moved into code and
+Indic buy capabilities that no amount of web data produces. We do not cut it below 35%:
+the proxy run shows a measurable general-lane cost even at these ratios, and MMLU
+regressions are hard to recover in post-training because they are knowledge, not skill.
 
 **Specialist code — 32% (1.15T).** The largest specialist lane, because SWE-bench
 Verified is win condition #1 and because code transfers: it is the densest available
 source of long-range dependency, state tracking, and formal structure, which is why it
-lifts reasoning benchmarks too. Why not 45%? Two hard reasons. (1) **Supply.** We own
-958B unique permissive-licensed tokens; 32% already puts us at 1.24 epochs once the
-long-context lane's repo-packing draw is charged. 45% would mean 1.7 epochs and force us
+lifts reasoning benchmarks too. Why not 45%? Two hard reasons. (1) **Supply.** The SOTA
+inventory anchors code on The Stack v2 (~900B) plus CommitPack; 32% already puts us past
+one epoch once the long-context lane's repo-packing draw is charged. 45% would force us
 into non-permissive or low-quality code, which raises legal risk for zero benchmark gain.
 (2) **Diminishing returns.** Code-maximal models (60–90% code) buy HumanEval and lose
 everything else; the models that actually win *agentic* SWE-bench are generalists with a
@@ -103,9 +106,9 @@ heavy code lane, because resolving a real issue requires reading English issue t
 planning, not just emitting syntax.
 
 **STEM and reasoning — 18% (648B).** Sized by the *long-CoT bottleneck*, not by ambition.
-Raw math and science text is plentiful (396B unique), but the reasoning-trace pool that
-actually teaches AIME-style behaviour is only ~37B tokens and heavily cross-distilled.
-Pushing this lane above 18% would mean repeating the same distilled traces, which the
+The SOTA inventory's reasoning slot is thin (~85B before papers): AON, OpenThoughts2,
+OpenMathReasoning, NuminaMath, OpenR1-Math. peS2o and proof-pile-2 add scientific depth,
+but pushing this lane above 18% means repeating the same distilled traces, which the
 data-constrained scaling law says is worth progressively less, and which in practice
 teaches trace *style* rather than reasoning. The right place to spend on reasoning is the
 anneal (27% of Tier A) and RL, not more pre-training epochs.
@@ -114,23 +117,25 @@ anneal (27% of Tier A) and RL, not more pre-training epochs.
 Against ~22 scheduled languages, 288B is ~13B tokens per language on a
 population-and-supply weighted split. That is roughly the scale at which a language stops
 being a transliteration veneer over English and starts carrying its own morphology.
-Section VIII measures what starvation costs: cutting Indic to 0.5% degrades Indic BPB by
-**1.47 bits** while improving the general lane by **0.041 bits**, an amount indistinguishable
-from seed noise. We have *not* yet measured whether 8% is optimal as opposed to merely
-safe — the sweep that would establish that is specified and unrun, and Section VIII says so.
+Section VIII measures what starvation costs: cutting Indic to 0.5% (`opus_greedy`)
+degrades Indic BPB by **1.57 bits** while improving the general lane by **0.049 bits**.
+Zeroing Indic entirely (`indic_00`) is worse still (**6.3 bits** of Indic BPB lost for
+**0.09 bits** of web). The share sweep puts a knee by ~2% and small further gains past 8%,
+so 8% reads as near the flat part of the curve, not just a safe guess.
 
 **Agentic and tool-use — 5% (180B).** Deliberately *not* larger, and this is the
-"wishful accounting" trap the whole plan is built to avoid. Natural agentic supply is
-**1.2B unique tokens** against a 180B target. Every token above that must be generated.
-5% is what we can credibly synthesise and verify (costed in Section III at 1,638
-GPU-days); 10% would be a number with nothing behind it. The curriculum compensates by
+"wishful accounting" trap the whole plan is built to avoid. Natural agentic supply in the
+SOTA inventory is only **~0.6B unique tokens** (627M) against a 180B target. Every token
+above that must be generated. 5% is what we can credibly synthesise and verify (costed in
+Section III); 10% would be a number with nothing behind it. The curriculum compensates by
 concentrating the lane where it matters: agentic runs at 10.5% during S4 and 22.5% of the
 anneal, so peak exposure is 4.5× the headline share.
 
 **Long context — 2% (72B).** Small because long context is **a packing strategy, not a
 token source**. 92% of this lane is whole-repository and whole-paper packing of tokens
-that already belong to the code and STEM lanes; only 5.8B is natively-long text (PG-19).
-Those borrowed tokens are debited from the lending lanes so nothing is double-counted.
+that already belong to the code and STEM lanes; only 5.8B is drawn from natively-long
+book-length corpora (the SOTA inventory lists ~40B packed). Those borrowed tokens are
+debited from the lending lanes so nothing is double-counted.
 Long context is expensive in FLOPs (attention at 64k), not in tokens, so the budget line
 understates the compute commitment.
 
@@ -138,12 +143,13 @@ understates the compute commitment.
 
 ## III. Inventory and honest supply sizing
 
-The audit below charges every lane against real, catalogued supply. Two mechanisms make
-it honest:
+The dataset catalog and sizes come from the Session 5 **SOTA Dataset Inventory** widget
+(`https://axiom.theschoolofai.in/widgets/widget_9_dataset_inventory.html`). The audit
+below charges every lane against that catalogued supply. Two mechanisms make it honest:
 
-- **Overlap discounts.** FineWeb-Edu and DCLM are both CommonCrawl derivatives; counting
-  both at face value would invent ~700B tokens that do not exist. Each dataset carries an
-  explicit discount, set high where we are unsure so that we under-claim.
+- **Overlap discounts.** FineWeb-Edu and DCLM are both CommonCrawl derivatives; V4-confirmed
+  slots (D1–D4, AON, D3) are lived references heavily overlapped with the open corpora.
+  Each dataset carries an explicit discount, set high where we are unsure so that we under-claim.
 - **Repetition is priced, not ignored.** Repeated tokens are converted to fresh-token
   equivalents using the data-constrained scaling law
   (Muennighoff et al. 2023), `D' = U·(1 + R*·(1 − e^{−R/R*}))` with `R* = 15.4`. A lane
@@ -152,29 +158,29 @@ it honest:
 <!-- BEGIN:supply -->
 | Lane | Allocated | Unique supply owned | Drawn from natural | Must be generated | Epochs on natural | Fresh-token equivalent |
 |---|---:|---:|---:|---:|---:|---:|
-| General web | 1.26T | 4.96T | 1.26T | 0.0B | 0.25 | 1.26T |
-| Specialist code | 1.15T | 958.4B | 1.15T | 0.0B | 1.24 | 1.15T |
-| STEM / reasoning | 648.0B | 396.2B | 550.8B | 99.9B | 1.43 | 645.7B |
-| Native Indic | 288.0B | 241.1B | 115.2B | 172.8B | 0.48 | 288.0B |
-| Agentic / tool-use | 180.0B | 1.2B | 1.8B | 186.8B | 1.61 | 180.0B |
-| Long context | 72.0B | 1.7B | 5.8B | 0.0B | 3.37 | 71.6B |
-| **Total** | **3.60T** | | | | | **3.60T** (99.9%) |
+| General web | 1.26T | 2.96T | 1.26T | 0.0B | 0.43 | 1.26T |
+| Specialist code | 1.15T | 913.2B | 1.15T | 0.0B | 1.30 | 1.15T |
+| STEM / reasoning | 648.0B | 157.1B | 550.8B | 99.9B | 3.60 | 616.2B |
+| Native Indic | 288.0B | 91.5B | 57.6B | 110.8B | 0.63 | 288.0B |
+| Agentic / tool-use | 180.0B | 0.6B | 1.8B | 186.8B | 3.35 | 179.9B |
+| Long context | 72.0B | 32.0B | 5.8B | 0.0B | 0.18 | 71.0B |
+| **Total** | **3.60T** | | | | | **3.56T** (99.0%) |
 <!-- END:supply -->
 
 ### Where the targets are met, plainly
 
-**Met with unique tokens, no repetition:** general web (0.25 epochs — we are selecting the
-best quarter of what we have, not scraping the barrel) and both natural Indic tiers
-(0.48 epochs).
+**Met with unique tokens, no repetition:** general web (well under one epoch — we are
+selecting, not scraping the barrel).
 
-**Met by repetition, within the 4-epoch soft cap:** code at **1.24 epochs** and STEM at
-**1.43 epochs**. Neither is a problem — up to ~4 epochs, repeated tokens are worth close
-to fresh ones. The code repetition is targeted, not uniform: we re-draw the Stack-Edu top
-decile and dependency-complete repositories, and we do not repeat the long tail.
+**Met by repetition, within the 4-epoch soft cap:** code and STEM. Neither is a problem —
+up to ~4 epochs, repeated tokens are worth close to fresh ones. The code repetition is
+targeted, not uniform: we re-draw CommitPackFT-shaped diffs and dependency-complete
+Stack v2 repositories, and we do not repeat the long tail.
 
-**Cannot be met without synthesis:** the agentic lane, which is short by **185B tokens**,
-and the Indic translated and synthetic tiers, short by **129B**. This is the plan's
-largest exposure, so it is costed rather than asserted.
+**Cannot be met without synthesis:** the agentic lane (SOTA inventory real supply is only
+~627M tokens against a 180B budget) and the Indic translated tier. Sangraha synthetic
+already covers most of the Indic synthetic tier; the remaining bill is mostly MT. This is
+the plan's largest exposure, so it is costed rather than asserted.
 
 ### The agentic lane is 99% synthetic. Here is the evidence it is feasible.
 
@@ -207,10 +213,10 @@ Scaling that to the 186.8B target, with explicit yield assumptions
 <!-- BEGIN:synthcost -->
 | Synthetic slot | Tokens needed | Yield after verify + dedup | Tokens actually generated | GPU-days |
 |---|---:|---:|---:|---:|
-| Agentic rollouts | 186.8B | 44% | 424.5B | 1,638 |
-| Indic translated tier | 115.2B | 75% | 153.6B | 89 |
-| Indic synthetic dialogue | 15.7B | 70% | 22.4B | 87 |
-| **Total** | | | | **1,813** (0.9 days on 2048 GPUs) |
+| Agentic rollouts | 186.8B | 44% | 424.4B | 1,637 |
+| Indic translated tier | 110.8B | 75% | 147.7B | 85 |
+| Indic synthetic dialogue | 0.0B | 70% | 0.0B | 0 |
+| **Total** | | | | **1,723** (0.8 days on 2048 GPUs) |
 <!-- END:synthcost -->
 
 So the agentic lane costs roughly **1,638 GPU-days of teacher inference plus ~1,800
@@ -234,26 +240,25 @@ English-translated plans.
 <!-- BEGIN:indic -->
 | Tier | Share of Indic slot | Tokens | Natural supply available | Gap to close | How the gap is closed |
 |---|---:|---:|---:|---:|---|
-| Verified | 10% | 28.8B | 74.6B | none | None needed. We select the best 28.8B of 74.6B, so we can afford to be picky. |
-| Unverified | 30% | 86.4B | 122.3B | none | None needed. 35.9B of headroom is held as contingency if the MT gate rejects more than planned. |
-| Translated | 40% | 115.2B | 2.2B | 113.0B | IndicTrans2-class MT over STEM and instruction tokens, round-trip chrF++ gated. |
-| Synthetic | 20% | 57.6B | 41.9B | 15.7B | Romanised Sangraha tier plus generated native-script multi-turn dialogue. |
+| Verified | 10% | 28.8B | 60.8B | none | None needed. We select the best 28.8B of 60.8B, so we can afford to be picky. |
+| Unverified | 10% | 28.8B | 30.7B | none | None needed. 1.9B of headroom is held as contingency if the MT gate rejects more than planned. |
+| Translated | 40% | 115.2B | 4.4B | 110.8B | IndicTrans2-class MT over STEM and instruction tokens, round-trip chrF++ gated. |
+| Synthetic | 40% | 115.2B | 162.0B | none | Sangraha synthetic tier from the SOTA inventory, plus a small native-script multi-turn dialogue top-up if selection rejects noisy shards. |
 | **Total** | **100%** | **288.0B** | | | |
 <!-- END:indic -->
 
-**Verified (10%, 28.8B).** Human- or heuristically-audited native text: Sangraha's
-verified tier, editorially-clean news, government gazettes, public-domain books. We have
-74.6B available and only spend 28.8B, so this tier is *selection-limited, not
-supply-limited* — we take the best 39% and can afford strict standards. This is also the
-tier the anneal draws from.
+**Verified (10%, 28.8B).** Sangraha verified from the SOTA inventory (~64B confirmed).
+We only spend 28.8B, so this tier is *selection-limited, not supply-limited*. This is
+also the tier the anneal draws from.
 
-**Unverified (30%, 86.4B).** LID- and perplexity-filtered crawl. 122.3B available against
-an 86.4B draw, leaving **35.9B of contingency** — this headroom is the plan's insurance
-policy, and Section X explains when we spend it.
+**Unverified (10%, 28.8B).** Sangraha unverified + IndicCorpV2. The SOTA inventory makes
+this tier thin (~31B post-discount), so we cut it from a previous 30% plan share down to
+10% rather than invent crawl that does not exist. Small headroom remains as contingency
+if the MT gate rejects more than planned.
 
-**Translated (40%, 115.2B) — the number that needs the most defence.** Only 2.2B of
-genuine parallel corpora exists, so ~113B must be machine-translated. Why spend the
-largest tier on generated data when 35.9B of *real* native text is sitting unused?
+**Translated (40%, 115.2B) — the number that needs the most defence.** BPCC + Samanantar
+supply only ~4–5B of genuine parallel text, so ~110B must be machine-translated. Why spend
+so much on generated data when some unused native crawl remains?
 
 Because they buy different things. The benchmarks we must win — IndicMMLU-Pro, MILU — are
 *academic and technical* evaluations in Indian languages. Native Indic web crawl is
@@ -269,10 +274,10 @@ pair, plus a native-speaker-audited sample per batch. Translationese is a real r
 is why translated tokens are barred from the anneal reserve — Tier A Indic is verified
 native only.
 
-**Synthetic (20%, 57.6B).** Sangraha's romanised tier (41.9B) plus ~15.7B of generated
-native-script multi-turn dialogue seeded from verified documents. Romanised text is not a
-compromise: a large share of real Indian user input is Latin-script Hindi or code-mixed,
-so this tier is target-distribution data, not a substitute for it.
+**Synthetic (40%, 115.2B).** The SOTA inventory's Sangraha synthetic tier (~162B) is the
+primary fill. We select from that pool rather than inventing synthetic Indic from scratch;
+a small dialogue top-up covers shards the quality gate rejects. Synthetic text is capped
+so it cannot dominate the verified core.
 
 ### Per-language split of the 288B
 
@@ -325,7 +330,7 @@ out of discretionary mass, and during S4 it typically does for code.
 | General web | 35.0% | none | S1 | No floor. OPUS over-selects web by default; it needs a ceiling, not a floor. |
 | Specialist code | 32.0% | 20.0% | S1 | Stops a mid-run reasoning spike from cannibalising SWE-bench capability. |
 | STEM / reasoning | 18.0% | 10.0% | S1 | Long-CoT tokens look high-loss and get down-weighted by loss-based selectors. |
-| Native Indic | 8.0% | 8.0% | S1 | The binding constraint. Measured: cutting Indic to 0.5% costs 1.47 bits of Indic BPB to buy 0.04 bits of web BPB. |
+| Native Indic | 8.0% | 8.0% | S1 | The binding constraint. Measured: cutting Indic to 0.5% costs 1.57 bits of Indic BPB to buy 0.05 bits of web BPB. |
 | Agentic / tool-use | 5.0% | 4.0% | S1 | Measured: at 0.5% the model can no longer emit a well-formed tool call (structure score 0.03 vs 0.80). Terminal output looks like noise to a loss-based selector. |
 | Long context | 2.0% | 1.5% | S3 | Prevents long packs being dropped for throughput reasons once sequence length rises. |
 <!-- END:floors -->
@@ -333,7 +338,7 @@ out of discretionary mass, and during S4 it typically does for code.
 Three deliberate choices here. **Web gets no floor** — it is what OPUS over-selects by
 default; if anything it needs a ceiling. **The Indic floor equals its budget share (8%)**,
 making it fully protected rather than partially, because the measured cost of starvation is
-so lopsided (1.47 bits lost against 0.04 gained) that there is no version of this trade
+so lopsided (1.57 bits lost against 0.05 gained) that there is no version of this trade
 worth letting a selector make. **The agentic floor (4%) sits below its share (5%)** so OPUS
 retains some discretion to up-weight agentic data during S4 when it becomes genuinely
 high-value.
@@ -404,13 +409,13 @@ absent from the pre-training index.
 <!-- BEGIN:anneal -->
 | Tier A component | Lane | Tokens | Share of anneal | Why it is held back |
 |---|---|---:|---:|---|
-| finemath_4plus | STEM / reasoning | 9.6B | 12.0% | Highest-density math on the open web. Held back so AIME/MATH gains land when LR is low and the model retains them. |
-| verified_long_cot | STEM / reasoning | 12.0B | 15.0% | Execution- or answer-verified long CoT only. Unverified CoT goes in pretrain; verified CoT is the anneal payload. |
-| execution_verified_agentic | Agentic / tool-use | 18.0B | 22.5% | Rollouts whose final state passes a real test/assertion. Scarcest, most expensive tokens we own. |
-| stack_edu_top_decile | Specialist code | 14.0B | 17.5% | Top-decile educational code + docstring-complete repos + CommitPackFT diffs shaped like SWE-bench edits. |
-| indic_verified_tier_a | Native Indic | 16.0B | 20.0% | 20% of the whole anneal for 8% of pretrain. Deliberate over-weight: Indic is the capability most likely to be under-consolidated at the end of a 3.6T English-dominated run. |
-| longctx_packed_tier_a | Long context | 6.4B | 8.0% | Full-repo and full-paper packs at 128k. Long-context is a positional-extrapolation skill and consolidates best at low LR. |
-| web_tier_a_reference | General web | 4.0B | 5.0% | Small anti-forgetting ballast so the anneal does not tank MMLU. |
+| numinamath_tier_a | STEM / reasoning | 9.6B | 12.0% | NuminaMath + curated OpenMathReasoning holdout. Held back so AIME/MATH gains land when LR is low and the model retains them. |
+| verified_long_cot | STEM / reasoning | 12.0B | 15.0% | Answer-verified OpenThoughts2 / OpenR1 holdout. Unverified CoT goes in pretrain; verified CoT is the anneal payload. |
+| execution_verified_agentic | Agentic / tool-use | 18.0B | 22.5% | SWE-Gym / SWE-smith / OpenHands rollouts whose final state passes a real test. Scarcest, most expensive tokens we own. |
+| commitpack_stack_holdout | Specialist code | 14.0B | 17.5% | CommitPackFT diffs + high-quality Stack v2 repos shaped like SWE-bench edits. |
+| indic_verified_tier_a | Native Indic | 16.0B | 20.0% | 20% of the whole anneal for 8% of pretrain. Deliberate over-weight from Sangraha verified. Indic is the capability most likely to be under-consolidated at the end of a 3.6T English-dominated run. |
+| longctx_packed_tier_a | Long context | 6.4B | 8.0% | Repo-packed code and book-length packs at 128k. Long-context is a positional-extrapolation skill and consolidates best at low LR. |
+| web_tier_a_reference | General web | 4.0B | 5.0% | Small anti-forgetting ballast from FineWeb-Edu / DCLM so the anneal does not tank MMLU. |
 | **Total** | | **80.0B** | **100%** | |
 <!-- END:anneal -->
 
@@ -517,15 +522,13 @@ cost — which would mean our Indic allocation is *too low*.
 |---|---|
 | Model | 10.7M non-embedding params, 6 layers, d=384, byte-level, 384 ctx |
 | Tokens per arm | 14.7M (1,200 steps × 32 × 384) |
-| Arms completed | **2 of 11 planned** — `v5` (2 seeds) and `opus_greedy` (1 seed). The sweep arms were not run; see "status" below. |
+| Arms completed | **11 of 11** — 13 runs (`v5` and `opus_greedy` × 2 seeds; all sweep and specialist arms × 1 seed) |
 | Corpora | **Real.** WikiText-2, local Python source, GSM8K, UD treebanks (Hindi/Marathi/Tamil/Telugu/Urdu), and 2,600 execution-grounded agentic traces |
-| Controls | Identical seed, architecture, optimizer, step count and token count across arms. Only sampling proportions differ. |
+| Controls | Identical architecture, optimizer, step count and token count across arms. Only sampling proportions differ. |
 
-**Status, stated up front so nothing below is oversold.** The full design is 11 arms
-(13 runs). Three runs completed before the sweep was stopped for time. The two arms that
-did complete are the headline comparison, so **H2 is tested and H1 is partially tested;
-H3 is not tested.** `results/ablation.json` is resumable — `make ablation` skips completed
-arms and runs the remaining ten in ~95 minutes.
+**Status.** All three hypotheses are now measured on this proxy. H1 and H2 come from the
+`v5` ↔ `indic_00` / `opus_greedy` comparisons; H3 comes from the Indic share sweep
+(`indic_00/02/04/16` plus `v5` at 8%).
 
 Byte-level tokenization is a deliberate control, not a shortcut: a BPE vocabulary trained
 on an English-dominated mixture makes Devanagari look artificially expensive, which would
@@ -534,7 +537,7 @@ comparable across scripts.
 
 The `opus_greedy` arm models what an unconstrained selector does when its scoring proxy is
 English- and maths-heavy: it cuts Indic and agentic to 0.5% each and spends the tokens on
-web and code instead. Sweep arms (not run) change **one lane at a time**, always taking the
+web and code instead. Sweep arms change **one lane at a time**, always taking the
 difference from the web lane, so any movement is attributable.
 
 **Metrics.** `BPB` is held-out bits per byte per lane. Two capability metrics go beyond
@@ -554,23 +557,42 @@ loss:
 | Arm | Indic % | Agentic % | web BPB | code BPB | stem BPB | indic BPB | agentic BPB | Indic script fidelity | Agentic structure |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `v5` | 8.0 | 5.0 | 2.406 | 2.411 | 2.093 | 2.329 | 0.757 | 0.988 | 0.797 |
-| `opus_greedy` | 0.5 | 0.5 | 2.365 | 2.331 | 2.048 | 3.803 | 2.653 | 0.958 | 0.031 |
+| `opus_greedy` | 0.5 | 0.5 | 2.357 | 2.333 | 2.045 | 3.896 | 2.632 | 0.939 | 0.031 |
+| `indic_00` | 0.0 | 5.0 | 2.316 | 2.347 | 2.013 | 8.642 | 0.691 | 0.002 | 0.812 |
+| `indic_02` | 2.0 | 5.0 | 2.394 | 2.458 | 2.125 | 2.527 | 0.743 | 0.964 | 0.812 |
+| `indic_04` | 4.0 | 5.0 | 2.395 | 2.470 | 2.125 | 2.376 | 0.717 | 0.940 | 0.812 |
+| `indic_16` | 16.0 | 5.0 | 2.480 | 2.464 | 2.153 | 2.292 | 0.751 | 0.991 | 0.875 |
+| `agentic_00` | 8.0 | 0.0 | 2.383 | 2.435 | 2.097 | 2.342 | 3.721 | 0.987 | 0.000 |
+| `agentic_02` | 8.0 | 2.0 | 2.395 | 2.426 | 2.084 | 2.332 | 1.574 | 0.991 | 0.500 |
+| `agentic_10` | 8.0 | 10.0 | 2.440 | 2.422 | 2.114 | 2.340 | 0.341 | 0.889 | 0.844 |
+| `indic_only` | 100.0 | 0.0 | 8.914 | 9.488 | 8.535 | 1.919 | 8.406 | 0.987 | 0.000 |
+| `agentic_only` | 0.0 | 100.0 | 10.066 | 9.433 | 10.317 | 12.351 | 0.106 | 0.000 | 1.000 |
 <!-- END:ablation -->
 
 <!-- BEGIN:findings -->
 | Question | Comparison | Measured |
 |---|---|---|
-| **H2.** What does an unprotected selector cost? | `opus_greedy` vs `v5`, Indic BPB | **+1.474 bits** |
-| | `opus_greedy` vs `v5`, agentic BPB | **+1.896 bits** |
-| | `opus_greedy` vs `v5`, web BPB (what it gains) | **-0.041 bits** |
-| | `opus_greedy` vs `v5`, script fidelity | **0.958 vs 0.988** |
+| **H1.** What does the 8% Indic floor cost the general lane? | `v5` vs `indic_00`, web BPB | **+0.090 bits** (3.9% worse) |
+| **H1.** What does it buy? | `v5` vs `indic_00`, Indic BPB | **−6.313 bits** (73.1% better) |
+| Return on the trade | Indic bits gained per general bit paid | **70×** |
+| **H2.** Is the damage gradual or categorical? | Indic script fidelity, `v5` vs `indic_00` | **0.988 vs 0.002** |
+| **H2.** What does an unprotected selector cost? | `opus_greedy` vs `v5`, Indic BPB | **+1.568 bits** |
+| | `opus_greedy` vs `v5`, agentic BPB | **+1.875 bits** |
+| | `opus_greedy` vs `v5`, web BPB (what it gains) | **-0.049 bits** |
+| | `opus_greedy` vs `v5`, script fidelity | **0.939 vs 0.988** |
+| **H3.** Marginal Indic BPB per extra point of share | 0% -> 2% | **+3.0574 bits/pp** (total +6.115) |
+| **H3.** Marginal Indic BPB per extra point of share | 2% -> 4% | **+0.0753 bits/pp** (total +0.151) |
+| **H3.** Marginal Indic BPB per extra point of share | 4% -> 8% | **+0.0119 bits/pp** (total +0.048) |
+| **H3.** Marginal Indic BPB per extra point of share | 8% -> 16% | **+0.0046 bits/pp** (total +0.037) |
+| Crowding-out cost vs a pure specialist | `v5` vs `indic_only`, Indic BPB | **+0.409 bits** |
+| | `v5` vs `agentic_only`, agentic BPB | **+0.651 bits** |
 | **Is the general-lane cost even measurable?** | seed-to-seed spread of `v5` web BPB over 2 seeds | **0.037 bits** - the same size as the effect above |
 | Seed noise ceiling | worst-lane BPB spread across 2 seeds of `v5` | **0.108 bits** (agentic) |
 <!-- END:findings -->
 
 **H2 is confirmed, and the asymmetry is extreme.** Removing the floors buys the greedy arm
-**0.041 bits** on the general lane. It costs **1.474 bits** on Indic and **1.896 bits** on
-agentic — a 36× and 46× worse trade than the gain. The starved model also loses the
+**0.049 bits** on the general lane. It costs **1.568 bits** on Indic and **1.875 bits** on
+agentic — roughly 32× and 38× worse than the gain. The starved model also loses the
 agentic protocol almost entirely: its structure score falls from **0.797 to 0.031**,
 meaning it can no longer emit a well-formed tool call, having seen tool traces in 0.5% of
 its batches instead of 5%. This is the concrete justification for implementing floors as a
@@ -578,27 +600,34 @@ hard sampler stage that OPUS cannot override. A selector optimising a global los
 would make exactly this trade, and on the metrics it was optimising it would look like an
 improvement.
 
-**H1 is supported, with an important caveat.** The predicted general-lane cost was
-< 0.10 bits; measured, it is 0.041. But the seed-to-seed spread of `v5`'s own web BPB
-across two seeds is **0.037 bits** — essentially the same magnitude. So the honest claim is
-not "the floors cost 0.041 bits" but **"the floors cost an amount we cannot cleanly
-distinguish from seed noise at this scale."** That is a better outcome for the plan than a
-precise small number, but it is a weaker *measurement*, and separating the two needs more
-seeds rather than more arms.
+**H1 is supported.** Zeroing Indic (`indic_00` vs `v5`) costs **0.090 bits** on web and
+buys nothing useful — Indic BPB collapses by **6.313 bits** (a **70×** return on the
+trade). The seed-to-seed spread of `v5` web BPB is **0.037 bits**, so the general-lane
+tax is larger than seed noise at this scale, but still well under the 0.10 BPB falsification
+threshold. The honest claim: **floors are cheap relative to what they protect.**
 
 **One result modifies the specification.** We expected Indic starvation to show up first as
-script collapse. It does not. At 0.5% Indic the model keeps script fidelity at **0.958** —
-nearly intact — while its Indic BPB is 1.47 bits worse. Script identity survives a token
-allocation; *competence* does not. Two consequences: the Indic floor must be sized for
-competence rather than for script survival, and any training-time monitor that watches only
-for code-switching will report green while the lane is being hollowed out. Section IV's
-per-language floor is written on this basis.
+script collapse. It does not. At 0.5% Indic the model keeps script fidelity at **0.939** —
+nearly intact — while its Indic BPB is 1.57 bits worse. At 0% Indic, script fidelity finally
+collapses to **0.002**. Script identity survives a token allocation longer than competence
+does. Two consequences: the Indic floor must be sized for competence rather than for script
+survival, and any training-time monitor that watches only for code-switching will report
+green while the lane is being hollowed out. Section IV's per-language floor is written on
+this basis.
 
-**H3 is untested.** The Indic sweep (0/2/4/16%) did not run, so the claim that returns have
-a knee at or below 8% is currently an argument from supply and per-language budgeting, not
-a measurement. Until the sweep completes, **8% should be read as "defensible and safe", not
-as "shown to be optimal"**. This is the largest evidential gap in the document, and it is
-one command away from being closed.
+**H3 is supported.** Marginal Indic BPB per percentage-point of share:
+
+| Step | bits/pp |
+|---|---:|
+| 0% → 2% | **+3.06** |
+| 2% → 4% | +0.075 |
+| 4% → 8% | +0.012 |
+| 8% → 16% | +0.005 |
+
+Almost all of the gain arrives by 2%; 8%→16% buys almost nothing. **8% sits on the flat
+part of the curve** — raising it further would mostly tax the web lane. Crowding-out vs
+specialists is modest (`v5` is +0.41 Indic BPB behind `indic_only`, +0.65 agentic BPB
+behind `agentic_only`).
 
 ### What this experiment does *not* establish
 
@@ -613,12 +642,9 @@ Stated plainly, because the gap matters.
   supported by the literature, not by this run.
 - **The corpora are analogues.** UD treebanks are not Sangraha; 24MB of local Python is not
   The Stack v2. Relative comparisons between arms are meaningful; absolute values are not.
-- **Two seeds on `v5`, one on `opus_greedy`.** Enough to show the Indic and agentic effects
-  dwarf seed noise by more than an order of magnitude; **not** enough to resolve the
-  general-lane cost, which is the same size as the spread.
-- **Nine of eleven arms did not run.** The sweeps that would locate the knee, and the
-  specialist ceilings that would quantify crowding-out, are specified and implemented but
-  unexecuted.
+- **Two seeds on `v5` and `opus_greedy`, one seed on every other arm.** Enough to show the
+  Indic and agentic effects dwarf seed noise by more than an order of magnitude; the
+  general-lane cost is now above the seed spread but still small.
 
 ### The 1B proxy we would run next
 
@@ -646,12 +672,8 @@ Failing the Indic knee test means 8% is wrong and should rise to 12%. Failing th
 means the web lane must go back up to 40% and the code lane down to 28%. Both outcomes are
 cheaper to discover at 1B than at 3.6T.
 
-**Before that, finish the cheap rung.** The remaining ten proxy runs cost ~95 minutes on a
-laptop and would close the H3 gap and quantify crowding-out:
-
-```bash
-make ablation && make tables   # resumes; completed arms are skipped
-```
+The cheap rung is finished (`make ablation && make tables`). The next evidence step is the
+1B proxy above, not more 10M-parameter arms.
 
 ---
 
@@ -694,7 +716,7 @@ romanised tier, where they are genuinely valuable (a large share of real Indian 
 is Latin-script). The lesson generalises to the full inventory — **LID is not a script
 gate**, and any Indic supply figure not separated by script should be treated as an upper
 bound. We recommend re-auditing Sangraha's verified tier on this basis before trusting the
-74.6B figure.
+SOTA inventory's ~64B confirmed figure.
 
 Second finding: **743 of 2,600 agentic traces (28.6%) leaked absolute local paths**
 (`/Users/...`) into their observations, because real command output contains real paths.
@@ -711,7 +733,7 @@ against raw crawl we expect 30–60% and the same code path handles it.
 
 | Risk | Trigger | Response |
 |---|---|---|
-| MT quality gate rejects > 25% | Round-trip chrF++ below threshold | Spend the **35.9B unverified-native contingency**; shift the translated tier from 40% → 30% and unverified 30% → 40%. Supply exists for this today. |
+| MT quality gate rejects > 25% | Round-trip chrF++ below threshold | Spend Sangraha synthetic headroom (~47B above the 40% synthetic tier) and the small unverified contingency (~1.9B); if needed shift translated 40% → 35% and synthetic 40% → 45%. Do not invent unverified crawl. |
 | Agentic synthesis accept rate < 40% | Verification pass rate in generation logs | Cut the agentic lane to 4% (its floor) and move the difference to code. Do **not** pad with unverified rollouts. |
 | Permissive code supply shrinks (licence changes) | Re-audit of Stack v2 | Code drops to 28%, web absorbs the difference. We do not substitute non-permissive code. |
 | MMLU regression > 2 points at 1B proxy | Go/no-go table above | Web 35% → 40%, code 32% → 28%. |
@@ -745,9 +767,10 @@ make tables     # regenerate every table in this README
 
 ### Sources for inventory figures
 
-Token counts are drawn from the dataset cards and papers for DCLM-Baseline, FineWeb-Edu,
-Nemotron-CC, The Stack v2 / StarCoder2, Stack-Edu, MegaMath, FineMath, OpenWebMath,
-Proof-Pile-2, peS2o, Sangraha / IndicLLMSuite, IndicCorp v2, Varta, MADLAD-400,
-BPCC / Samanantar, ToolBench, xLAM / APIGen, and PG-19. Every row carries a
-`provenance` field of `published`, `estimate` or `derived`; treat `estimate` rows as
-±30% and `low` confidence rows as ±50%.
+Token counts and the dataset catalog follow the Session 5 SOTA Dataset Inventory widget:
+The Stack v2, CommitPack, D3 Code (V4); ToolBench, Glaive, ToolACE, xLAM/APIGen, Hermes,
+NexusRaven, SWE-Gym, SWE-smith, OpenHands; OpenThoughts2, OpenMathReasoning, NuminaMath,
+OpenR1-Math, AON (V4); repo-packed code and book-length corpora; Sangraha
+(verified / unverified / synthetic), IndicCorpV2, BPCC, Samanantar; FineWeb-Edu,
+DCLM-Baseline, peS2o, proof-pile-2, D1/D2/D4 (V4). Every row carries a `provenance`
+field of `confirmed`, `estimate` or `derived`; treat `estimate` rows as ±30%.

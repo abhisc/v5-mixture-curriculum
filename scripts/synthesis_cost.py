@@ -8,6 +8,8 @@ teacher-policy half.
 
 Every assumption is a named constant. Change one and the conclusion changes; that is the
 point. Nothing here is tuned to make the answer look good.
+
+Token targets are derived from inventory/mixture.json so a catalog change moves the bill.
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+
+from budget import audit, lanes_of, load
 
 ROOT = Path(__file__).resolve().parents[1]
 # The generator writes into the (gitignored) data directory; results/ holds the committed
@@ -40,7 +44,7 @@ class Assumptions:
     mt_tok_per_s_per_gpu: float = 20_000.0
     # Round-trip quality gate rejection rate on machine translation.
     mt_reject_rate: float = 0.25
-    # Dialogue generator for the Indic synthetic tier.
+    # Dialogue generator for the Indic synthetic tier top-up.
     dialogue_tok_per_s_per_gpu: float = 3_000.0
     dialogue_accept_rate: float = 0.70
 
@@ -68,8 +72,11 @@ def gpu_days(target_tokens_b: float, tok_per_s: float, yield_frac: float) -> tup
 def report(a: Assumptions | None = None) -> dict:
     a = a or Assumptions()
     exec_stats = measured_execution_throughput()
+    inv, mix = load()
+    aud = audit(inv, mix)
 
-    agentic_target = 186.8
+    agentic = aud["lanes"]["agentic"]
+    agentic_target = agentic.synthetic_target_b
     agentic_yield = a.accept_rate * (1 - a.dedup_loss)
     agentic_gen, agentic_gpu_days = gpu_days(
         agentic_target, a.teacher_decode_tok_per_s_per_gpu, agentic_yield
@@ -84,10 +91,19 @@ def report(a: Assumptions | None = None) -> dict:
             / SECONDS_PER_DAY
         )
 
-    mt_target = 115.2
+    indic_cfg = lanes_of(mix)["indic"]
+    indic_alloc = aud["pretrain_b"] * indic_cfg["share"]
+    tiers = indic_cfg["tiers"]
+    tier_supply = aud["indic_tiers"]
+
+    mt_need = indic_alloc * tiers["translated"]["share"]
+    mt_have = tier_supply.get("translated", 0.0)
+    mt_target = max(0.0, mt_need - mt_have)
     mt_gen, mt_gpu_days = gpu_days(mt_target, a.mt_tok_per_s_per_gpu, 1 - a.mt_reject_rate)
 
-    dlg_target = 57.6 - 41.9  # the part not covered by the existing romanised tier
+    syn_need = indic_alloc * tiers["synthetic"]["share"]
+    syn_have = tier_supply.get("synthetic", 0.0)
+    dlg_target = max(0.0, syn_need - syn_have)
     dlg_gen, dlg_gpu_days = gpu_days(
         dlg_target, a.dialogue_tok_per_s_per_gpu, a.dialogue_accept_rate
     )
@@ -96,14 +112,14 @@ def report(a: Assumptions | None = None) -> dict:
     out = {
         "measured_execution": exec_stats,
         "agentic": {
-            "target_b": agentic_target,
+            "target_b": round(agentic_target, 1),
             "yield": round(agentic_yield, 3),
             "must_generate_b": round(agentic_gen, 1),
             "gpu_days": round(agentic_gpu_days, 0),
             "cpu_core_days_for_execution": round(core_days, 0) if core_days else None,
         },
         "indic_translated": {
-            "target_b": mt_target,
+            "target_b": round(mt_target, 1),
             "yield": round(1 - a.mt_reject_rate, 3),
             "must_generate_b": round(mt_gen, 1),
             "gpu_days": round(mt_gpu_days, 0),
